@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Tuneline Demo</title>
+<meta name="robots" content="noindex">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,500..900&family=Public+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: app shell for screen-sharing. Left rail of views, one working area; sample shop data only. */
+:root {
+  --ground: #f2f4f6; --panel: #ffffff; --ink: #15212c; --muted: #56636f; --line: #d5dbe1;
+  --accent: #1d63a6; --accent-ink: #ffffff; --accent-soft: #e2ecf6;
+  --tag: #ecd9a4; --tag-ink: #2b2414;
+  --good: #2f7a4a; --good-soft: #e1f1e6; --warn: #9a5b00; --warn-soft: #fbefd9; --bad: #b4421f; --bad-soft: #fbe6de;
+  --display: "Archivo", "Arial Narrow", Arial, sans-serif;
+  --body: "Public Sans", "Segoe UI", Helvetica, Arial, sans-serif;
+  --mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --ground: #0f161d; --panel: #16202a; --ink: #e5eaef; --muted: #9aa7b3; --line: #2a3742;
+  --accent: #5aa2e6; --accent-ink: #0b1622; --accent-soft: #1a2c3d; --tag: #d9c48d; --tag-ink: #241d0e;
+  --good: #6cc48d; --good-soft: #17301f; --warn: #e7b25a; --warn-soft: #33270f; --bad: #f08a64; --bad-soft: #3a1d14;
+  color-scheme: dark; } }
+:root[data-theme="dark"] {
+  --ground: #0f161d; --panel: #16202a; --ink: #e5eaef; --muted: #9aa7b3; --line: #2a3742;
+  --accent: #5aa2e6; --accent-ink: #0b1622; --accent-soft: #1a2c3d; --tag: #d9c48d; --tag-ink: #241d0e;
+  --good: #6cc48d; --good-soft: #17301f; --warn: #e7b25a; --warn-soft: #33270f; --bad: #f08a64; --bad-soft: #3a1d14;
+  color-scheme: dark; }
+* { box-sizing: border-box; }
+html, body { height: 100%; }
+body { margin: 0; background: var(--ground); color: var(--ink); font: 400 15px/1.5 var(--body); }
+button { font: inherit; color: inherit; }
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-radius: 4px; }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+
+.banner { background: var(--tag); color: var(--tag-ink); font: 500 0.8rem/1.3 var(--mono); padding: 8px 16px; text-align: center; }
+.banner a { color: inherit; }
+.shell { display: grid; grid-template-columns: 230px 1fr; min-height: calc(100% - 34px); }
+.rail { border-right: 1px solid var(--line); background: var(--panel); padding: 20px 14px; display: flex; flex-direction: column; gap: 22px; }
+.brand { font: 800 1.2rem/1 var(--display); font-stretch: 85%; text-transform: uppercase; letter-spacing: 0.02em; display: flex; gap: 8px; align-items: center; padding-inline: 8px; }
+.shop { padding-inline: 8px; font-size: 0.85rem; color: var(--muted); }
+.shop strong { display: block; color: var(--ink); font-size: 0.95rem; }
+.nav { display: grid; gap: 2px; }
+.nav button { display: flex; justify-content: space-between; align-items: center; gap: 8px; text-align: left; border: 0; background: none; padding: 9px 10px; border-radius: 6px; cursor: pointer; font-weight: 500; }
+.nav button:hover { background: var(--ground); }
+.nav button[aria-current="page"] { background: var(--accent-soft); color: var(--accent); }
+.count { font: 500 0.75rem/1 var(--mono); padding: 3px 6px; border-radius: 999px; background: var(--ground); color: var(--muted); }
+.shell > * { min-width: 0; }
+.main { padding: 26px clamp(16px, 3vw, 36px) 48px; min-width: 0; }
+.head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; gap: 12px; margin-bottom: 22px; }
+h1 { font: 800 clamp(1.6rem, 3vw, 2.1rem)/1.05 var(--display); font-stretch: 82%; text-transform: uppercase; margin: 0; }
+.sub { color: var(--muted); margin: 4px 0 0; }
+.eyebrow { font: 500 0.72rem/1 var(--mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+
+@media (max-width: 760px) {
+  .shell { grid-template-columns: 1fr; }
+  .rail { border-right: 0; border-bottom: 1px solid var(--line); padding: 12px 16px; gap: 10px; }
+  .shop { display: none; }
+  .nav { grid-auto-flow: column; overflow-x: auto; }
+  .nav button { white-space: nowrap; }
+  .item, .log .item { grid-template-columns: 1fr; }
+  .acts { justify-content: start; }
+}
+
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 170px), 1fr)); gap: 12px; margin-bottom: 22px; }
+.stat { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; display: grid; gap: 6px; }
+.stat .v { font: 800 2rem/1 var(--display); font-stretch: 80%; font-variant-numeric: tabular-nums; }
+.stat .n { font-size: 0.82rem; color: var(--muted); }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+.grid2 > * { min-width: 0; }
+@media (max-width: 1000px) { .grid2 { grid-template-columns: 1fr; } }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.card h2 { font: 700 1rem/1.2 var(--display); margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--line); display: flex; justify-content: space-between; gap: 8px; align-items: center; }
+.card h2 .link { font: 500 0.82rem var(--body); color: var(--accent); background: none; border: 0; cursor: pointer; }
+
+.list { list-style: none; margin: 0; padding: 0; }
+.item { display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--line); }
+.item:last-child { border-bottom: 0; }
+.item > div { min-width: 0; }
+.item .who { font-weight: 600; }
+.item .meta { font-size: 0.85rem; color: var(--muted); }
+.acts { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; justify-content: end; }
+
+.btn { border: 1.5px solid var(--accent); background: var(--accent); color: var(--accent-ink); border-radius: 6px; padding: 6px 11px; font-weight: 600; font-size: 0.85rem; cursor: pointer; white-space: nowrap; }
+.btn.ghost { background: transparent; color: var(--accent); }
+.btn:disabled { opacity: 0.5; cursor: default; }
+.pill { font: 600 0.72rem/1 var(--mono); letter-spacing: 0.04em; text-transform: uppercase; padding: 5px 7px; border-radius: 4px; white-space: nowrap; }
+.pill.good { background: var(--good-soft); color: var(--good); }
+.pill.warn { background: var(--warn-soft); color: var(--warn); }
+.pill.bad { background: var(--bad-soft); color: var(--bad); }
+.pill.info { background: var(--accent-soft); color: var(--accent); }
+
+.tablewrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+th, td { text-align: left; padding: 11px 14px; border-bottom: 1px solid var(--line); white-space: nowrap; }
+th { font: 500 0.72rem/1 var(--mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); background: var(--ground); }
+td.num { font-variant-numeric: tabular-nums; }
+tr:last-child td { border-bottom: 0; }
+.toolbar { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 14px; }
+.toolbar input, .toolbar select { font: inherit; padding: 8px 10px; border: 1px solid var(--line); border-radius: 6px; background: var(--panel); color: var(--ink); }
+.toolbar input { flex: 1 1 220px; }
+
+.log { font-family: var(--mono); font-size: 0.82rem; }
+.log .item { grid-template-columns: 92px 1fr auto; }
+.msg { background: var(--ground); border-radius: 8px; padding: 10px 12px; font-family: var(--body); font-size: 0.88rem; margin-top: 6px; white-space: normal; }
+
+.bars { display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; align-items: end; height: 140px; padding: 16px; }
+.bar { background: var(--accent); border-radius: 3px 3px 0 0; position: relative; min-height: 4px; }
+.bar.now { background: var(--good); }
+.barlabels { display: grid; grid-template-columns: repeat(12, 1fr); gap: 6px; padding: 0 16px 14px; font: 500 0.68rem/1 var(--mono); color: var(--muted); text-align: center; }
+
+.phone { max-width: 340px; margin: 0 auto; border: 10px solid var(--ink); border-radius: 28px; background: var(--panel); padding: 22px 18px; display: grid; gap: 12px; }
+.phone h3 { font: 800 1.3rem/1.1 var(--display); font-stretch: 85%; text-transform: uppercase; margin: 0; }
+.phone .price { font: 800 2rem/1 var(--display); font-stretch: 80%; }
+.phone ul { margin: 0; padding-left: 1.1em; font-size: 0.9rem; }
+.phone .field { border: 1px solid var(--line); border-radius: 6px; padding: 9px 10px; color: var(--muted); font-size: 0.88rem; }
+
+.toast { position: fixed; left: 50%; bottom: calc(20px + env(safe-area-inset-bottom, 0px)); transform: translateX(-50%) translateY(20px); background: var(--ink); color: var(--ground); padding: 11px 16px; border-radius: 8px; font-weight: 500; opacity: 0; transition: .2s ease; pointer-events: none; max-width: calc(100% - 32px); }
+.toast.show { opacity: 1; transform: translateX(-50%); }
+</style>
+</head>
+<body>
+<div class="banner">Demo with sample data. Ridgeline Heating &amp; Air is a made-up shop. <a href="/">Back to Tuneline</a></div>
+<div class="shell">
+  <aside class="rail">
+    <div class="brand"><svg width="22" height="22" viewBox="0 0 28 28" aria-hidden="true"><rect x="3" y="5" width="22" height="20" rx="3" fill="none" stroke="currentColor" stroke-width="2.5"/><circle cx="14" cy="10" r="2" fill="currentColor"/><path d="M8 16h12M8 20h8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/></svg>Tuneline</div>
+    <div class="shop"><strong>Ridgeline Heating &amp; Air</strong>Tulsa, OK · 3 techs</div>
+    <nav class="nav" aria-label="Views" id="nav"></nav>
+  </aside>
+  <main class="main" id="view"></main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function () {
+  const TODAY = new Date(2026, 9, 6); // Tue 6 Oct 2026
+  const DAY = 864e5;
+  const d = (offset) => new Date(TODAY.getTime() + offset * DAY);
+  const fmt = (dt) => dt.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+  const money = (n) => "$" + n.toLocaleString("en-US");
+
+  const PLANS = { comfort: { name: "Comfort Club", price: 189 }, plus: { name: "Comfort Club Plus", price: 279 }, water: { name: "Water Heater Care", price: 99 } };
+  const TECHS = ["Jake R.", "Maria S.", "Dev P."];
+  const members = [
+    { id: 1, name: "Diane Morales", addr: "1412 S Quincy Ave", phone: "(918) 555-0142", plan: "comfort", equip: "Gas furnace + AC", renews: d(27), visitDue: d(8), visit: "Fall tune-up", card: "Visa 4242", status: "active" },
+    { id: 2, name: "Tom & Kelly Brennan", addr: "88 E 41st St", phone: "(918) 555-0177", plan: "plus", equip: "Heat pump, 2 zones", renews: d(5), visitDue: d(3), visit: "Fall tune-up", card: "Mastercard 5100", status: "active" },
+    { id: 3, name: "Ray Whitfield", addr: "2290 N Harvard Ave", phone: "(918) 555-0103", plan: "comfort", equip: "Gas furnace + AC", renews: d(-4), visitDue: d(12), visit: "Fall tune-up", card: "Card expired", status: "failed" },
+    { id: 4, name: "Linda Cho", addr: "507 W Easton St", phone: "(918) 555-0129", plan: "water", equip: "50 gal gas water heater", renews: d(61), visitDue: d(1), visit: "Annual flush", card: "Visa 1881", status: "active" },
+    { id: 5, name: "Marcus Hale", addr: "3101 E 21st St", phone: "(918) 555-0165", plan: "plus", equip: "Furnace, AC, humidifier", renews: d(14), visitDue: d(6), visit: "Fall tune-up", card: "Amex 1005", status: "active" },
+    { id: 6, name: "Patricia Owens", addr: "1220 S Lewis Ave", phone: "(918) 555-0188", plan: "comfort", equip: "Gas furnace + AC", renews: d(112), visitDue: d(15), visit: "Fall tune-up", card: "Visa 7310", status: "active" },
+    { id: 7, name: "Greg Alvarez", addr: "64 N Main St, Broken Arrow", phone: "(918) 555-0111", plan: "comfort", equip: "Heat pump", renews: d(2), visitDue: d(20), visit: "Fall tune-up", card: "Pays by check", status: "manual" },
+    { id: 8, name: "Sunrise Bakery", addr: "915 E 3rd St", phone: "(918) 555-0150", plan: "plus", equip: "RTU, 5 ton", renews: d(190), visitDue: d(4), visit: "Fall tune-up", card: "Visa 0019", status: "active" },
+    { id: 9, name: "Hannah Price", addr: "4412 S Peoria Ave", phone: "(918) 555-0134", plan: "water", equip: "Tankless gas", renews: d(33), visitDue: d(40), visit: "Descale", card: "Visa 6611", status: "active" },
+    { id: 10, name: "Bill Turner", addr: "1709 E 15th St", phone: "(918) 555-0196", plan: "comfort", equip: "Gas furnace + AC", renews: d(19), visitDue: d(9), visit: "Fall tune-up", card: "Mastercard 4410", status: "active" },
+    { id: 11, name: "Elena Ruiz", addr: "300 W 7th St", phone: "(918) 555-0108", plan: "comfort", equip: "Gas furnace + AC", renews: d(240), visitDue: d(2), visit: "Fall tune-up", card: "Visa 2290", status: "active" },
+    { id: 12, name: "Okafor family", addr: "7820 S Yale Ave", phone: "(918) 555-0172", plan: "plus", equip: "Two furnaces + AC", renews: d(9), visitDue: d(11), visit: "Fall tune-up", card: "Visa 5555", status: "active" },
+  ];
+  const TOTAL_MEMBERS = 143; // shop total; the 12 above are the ones that need attention or are shown as examples
+
+  const state = { view: "today", search: "", scheduled: { 11: fmt(d(2)) }, renewed: {}, reminded: {}, log: [
+    { when: "Today 8:02", who: "Linda Cho", kind: "Visit reminder", ch: "Text", text: "Hi Linda, your annual water heater flush with Ridgeline is due this week. Reply 1 for Wed AM, 2 for Thu PM, or call (918) 555-0100." },
+    { when: "Today 8:02", who: "Tom & Kelly Brennan", kind: "Renewal notice", ch: "Email", text: "Your Comfort Club Plus plan renews on " + fmt(d(5)) + " for $279 on your Mastercard ending 5100. Nothing to do. Reply if anything changed." },
+    { when: "Yesterday", who: "Ray Whitfield", kind: "Card failed", ch: "Text", text: "Hi Ray, we couldn't renew your Comfort Club plan because the card on file has expired. Update it here: ridgeline.tuneline.app/r/8KQ2" },
+    { when: "Yesterday", who: "Elena Ruiz", kind: "Visit booked", ch: "Text", text: "You're booked: fall tune-up Thu " + fmt(d(2)) + ", 9 to 11am, with Jake. Reply C to change." },
+    { when: "Oct 2", who: "Marcus Hale", kind: "Visit reminder", ch: "Text", text: "Hi Marcus, time for your fall tune-up. Pick a time: ridgeline.tuneline.app/b/MH21" },
+  ] };
+
+  const views = [
+    { id: "today", label: "Today" },
+    { id: "visits", label: "Tune-ups to schedule", count: () => visitsDue().length },
+    { id: "renewals", label: "Renewals", count: () => renewalsDue().length },
+    { id: "members", label: "Members", count: () => TOTAL_MEMBERS },
+    { id: "reminders", label: "Reminders sent", count: () => state.log.length },
+    { id: "signup", label: "Signup page" },
+    { id: "report", label: "Monthly report" },
+  ];
+
+  const daysFrom = (dt) => Math.round((dt - TODAY) / DAY);
+  const visitsDue = () => members.filter(m => !state.scheduled[m.id] && daysFrom(m.visitDue) <= 14).sort((a, b) => a.visitDue - b.visitDue);
+  const renewalsDue = () => members.filter(m => !state.renewed[m.id] && daysFrom(m.renews) <= 30).sort((a, b) => a.renews - b.renews);
+  const planRevenue = () => 23860 + Object.keys(state.renewed).reduce((s, id) => s + PLANS[members.find(m => m.id == id).plan].price, 0);
+
+  function whenLabel(dt) {
+    const n = daysFrom(dt);
+    if (n < 0) return { t: Math.abs(n) + " days overdue", c: "bad" };
+    if (n === 0) return { t: "Today", c: "warn" };
+    if (n <= 7) return { t: "In " + n + " day" + (n === 1 ? "" : "s"), c: "warn" };
+    return { t: fmt(dt), c: "info" };
+  }
+  function renewalPill(m) {
+    if (state.renewed[m.id]) return '<span class="pill good">Renewed</span>';
+    if (m.status === "failed") return '<span class="pill bad">Card failed</span>';
+    if (m.status === "manual") return '<span class="pill warn">Pays by check</span>';
+    return '<span class="pill info">Auto-renews</span>';
+  }
+  const esc = (s) => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+  function toast(t) { const el = document.getElementById("toast"); el.textContent = t; el.classList.add("show"); clearTimeout(toast.h); toast.h = setTimeout(() => el.classList.remove("show"), 2600); }
+  function addLog(who, kind, ch, text) { state.log.unshift({ when: "Just now", who, kind, ch, text }); }
+
+  function visitItem(m) {
+    const w = whenLabel(m.visitDue);
+    return `<li class="item"><div><div class="who">${esc(m.name)}</div><div class="meta">${m.visit} · ${esc(m.equip)} · ${esc(m.addr)}</div></div>
+      <div class="acts"><span class="pill ${w.c}">${w.t}</span><button class="btn" data-act="schedule" data-id="${m.id}">Schedule</button></div></li>`;
+  }
+  function renewalItem(m) {
+    const w = whenLabel(m.renews), p = PLANS[m.plan];
+    let act = "";
+    if (!state.renewed[m.id]) {
+      if (m.status === "failed") act = `<button class="btn ghost" data-act="cardlink" data-id="${m.id}" ${state.reminded[m.id] ? "disabled" : ""}>${state.reminded[m.id] ? "Link sent" : "Text card link"}</button>`;
+      else if (m.status === "manual") act = `<button class="btn ghost" data-act="remind" data-id="${m.id}" ${state.reminded[m.id] ? "disabled" : ""}>${state.reminded[m.id] ? "Reminder sent" : "Send reminder"}</button>`;
+      else act = `<button class="btn" data-act="renew" data-id="${m.id}">Renew now</button>`;
+    }
+    return `<li class="item"><div><div class="who">${esc(m.name)}</div><div class="meta">${p.name} · ${money(p.price)}/yr · ${esc(m.card)}</div></div>
+      <div class="acts"><span class="pill ${state.renewed[m.id] ? "good" : w.c}">${state.renewed[m.id] ? "Done" : w.t}</span>${renewalPill(m)}${act}</div></li>`;
+  }
+
+  const render = {
+    today() {
+      const v = visitsDue(), r = renewalsDue(), failed = members.filter(m => m.status === "failed" && !state.renewed[m.id]).length;
+      return `<div class="head"><div><p class="eyebrow">Tuesday, October 6</p><h1>Good morning, Ridgeline</h1><p class="sub">Here's what your maintenance plan needs this week.</p></div></div>
+      <div class="stats">
+        <div class="stat"><span class="eyebrow">Active members</span><span class="v">${TOTAL_MEMBERS}</span><span class="n">+6 this month</span></div>
+        <div class="stat"><span class="eyebrow">Plan revenue, last 12 mo</span><span class="v">${money(planRevenue())}</span><span class="n">Billed automatically</span></div>
+        <div class="stat"><span class="eyebrow">Renewal rate</span><span class="v">91%</span><span class="n">Target 86%</span></div>
+        <div class="stat"><span class="eyebrow">Need attention</span><span class="v" style="color:var(--bad)">${failed + members.filter(m => m.status === "manual" && !state.renewed[m.id] && !state.reminded[m.id]).length}</span><span class="n">Failed card or pays by check</span></div>
+      </div>
+      <div class="grid2">
+        <div class="card"><h2>Tune-ups due in the next 2 weeks <button class="link" data-go="visits">See all ${v.length}</button></h2><ul class="list">${v.slice(0, 4).map(visitItem).join("") || '<li class="item"><div class="meta">All caught up.</div></li>'}</ul></div>
+        <div class="card"><h2>Renewals in the next 30 days <button class="link" data-go="renewals">See all ${r.length}</button></h2><ul class="list">${r.slice(0, 4).map(renewalItem).join("") || '<li class="item"><div class="meta">All caught up.</div></li>'}</ul></div>
+      </div>`;
+    },
+    visits() {
+      const v = visitsDue();
+      return `<div class="head"><div><p class="eyebrow">Tune-ups</p><h1>Tune-ups to schedule</h1><p class="sub">Members due in the next 14 days. Scheduling texts the customer and puts it on the tech's list.</p></div></div>
+      <div class="card"><ul class="list">${v.map(visitItem).join("") || '<li class="item"><div class="meta">Every due tune-up is scheduled.</div></li>'}</ul></div>`;
+    },
+    renewals() {
+      const r = renewalsDue();
+      return `<div class="head"><div><p class="eyebrow">Renewals</p><h1>Renewals coming up</h1><p class="sub">Cards on file renew on their date without you lifting a finger. Only the exceptions need you.</p></div></div>
+      <div class="card"><ul class="list">${r.map(renewalItem).join("")}</ul></div>`;
+    },
+    members() {
+      const q = state.search.toLowerCase();
+      const rows = members.filter(m => !q || (m.name + m.addr + m.equip).toLowerCase().includes(q));
+      return `<div class="head"><div><p class="eyebrow">Members</p><h1>Plan members</h1><p class="sub">Showing ${rows.length} of ${TOTAL_MEMBERS} members.</p></div><button class="btn" data-act="add">Add member</button></div>
+      <div class="toolbar"><input id="search" type="search" placeholder="Search name, address or equipment" value="${esc(state.search)}" aria-label="Search members"></div>
+      <div class="card tablewrap"><table><thead><tr><th>Member</th><th>Plan</th><th>Equipment</th><th>Next visit</th><th>Renews</th><th>Billing</th></tr></thead><tbody>
+      ${rows.map(m => `<tr><td><strong>${esc(m.name)}</strong><br><span class="meta" style="color:var(--muted)">${esc(m.phone)}</span></td><td>${PLANS[m.plan].name}</td><td>${esc(m.equip)}</td>
+        <td>${state.scheduled[m.id] ? '<span class="pill good">' + state.scheduled[m.id] + "</span>" : fmt(m.visitDue)}</td><td class="num">${state.renewed[m.id] ? fmt(new Date(m.renews.getTime() + 365 * DAY)) : fmt(m.renews)}</td><td>${renewalPill(m)}</td></tr>`).join("")}
+      </tbody></table></div>`;
+    },
+    reminders() {
+      return `<div class="head"><div><p class="eyebrow">Reminders</p><h1>Reminders sent</h1><p class="sub">Every text and email Tuneline sent for you, so you know exactly what customers saw.</p></div></div>
+      <div class="card log"><ul class="list">${state.log.map(l => `<li class="item"><div class="meta">${l.when}</div><div><strong style="font-family:var(--body)">${esc(l.who)}</strong> · ${l.kind}<div class="msg">${esc(l.text)}</div></div><span class="pill info">${l.ch}</span></li>`).join("")}</ul></div>`;
+    },
+    signup() {
+      return `<div class="head"><div><p class="eyebrow">Signup page</p><h1>Your plan signup page</h1><p class="sub">Share this link on your website, invoices or by text after a service call. Customers join and pay in about a minute.</p></div><span class="pill info">ridgeline.tuneline.app/join</span></div>
+      <div class="phone" aria-label="Signup page as a customer sees it on a phone">
+        <span class="eyebrow">Ridgeline Heating &amp; Air</span>
+        <h3>Join the Comfort Club</h3>
+        <div class="price">$189<span style="font:500 .9rem var(--body);color:var(--muted)"> / year</span></div>
+        <ul><li>Spring AC and fall furnace tune-up</li><li>15% off repairs</li><li>Priority scheduling, no overtime fees</li></ul>
+        <div class="field">Full name</div><div class="field">Service address</div><div class="field">Card number</div>
+        <button class="btn" data-act="join" style="padding:11px">Join for $189/year</button>
+        <span style="font-size:.78rem;color:var(--muted)">Renews yearly. Cancel any time by calling (918) 555-0100.</span>
+      </div>`;
+    },
+    report() {
+      const vals = [1380, 1420, 1610, 2280, 2650, 1890, 1720, 1540, 1980, 2210, 2470, 2090], max = 2800;
+      const labels = ["Oct", "Nov", "Dec", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep"];
+      return `<div class="head"><div><p class="eyebrow">Monthly report · September 2026</p><h1>Plan report</h1><p class="sub">Emailed to you on the 1st of each month.</p></div></div>
+      <div class="stats">
+        <div class="stat"><span class="eyebrow">New members</span><span class="v">6</span><span class="n">4 from the signup link</span></div>
+        <div class="stat"><span class="eyebrow">Renewed</span><span class="v">11 of 12</span><span class="n">1 card failed, link sent</span></div>
+        <div class="stat"><span class="eyebrow">Tune-ups done</span><span class="v">38</span><span class="n">9 still due in October</span></div>
+        <div class="stat"><span class="eyebrow">Plan revenue</span><span class="v">${money(2090)}</span><span class="n">September</span></div>
+      </div>
+      <div class="card"><h2>Plan revenue by month</h2>
+        <div class="bars" role="img" aria-label="Monthly plan revenue, October 2025 to September 2026, between $1,380 and $2,650">${vals.map((v, i) => `<div class="bar${i === 11 ? " now" : ""}" style="height:${(v / max * 100).toFixed(1)}%" title="${labels[i]}: ${money(v)}"></div>`).join("")}</div>
+        <div class="barlabels">${labels.map(l => `<span>${l}</span>`).join("")}</div></div>`;
+    },
+  };
+
+  function draw() {
+    document.getElementById("nav").innerHTML = views.map(v => `<button data-go="${v.id}" ${state.view === v.id ? 'aria-current="page"' : ""}><span>${v.label}</span>${v.count ? `<span class="count">${v.count()}</span>` : ""}</button>`).join("");
+    document.getElementById("view").innerHTML = render[state.view]();
+  }
+
+  document.addEventListener("click", (e) => {
+    const go = e.target.closest("[data-go]");
+    if (go) { state.view = go.dataset.go; draw(); window.scrollTo(0, 0); return; }
+    const a = e.target.closest("[data-act]");
+    if (!a) return;
+    const m = members.find(x => x.id == a.dataset.id);
+    switch (a.dataset.act) {
+      case "schedule": {
+        const tech = TECHS[m.id % 3], slot = fmt(d(Math.max(1, daysFrom(m.visitDue) - 1))) + ", 9 to 11am";
+        state.scheduled[m.id] = fmt(d(Math.max(1, daysFrom(m.visitDue) - 1)));
+        addLog(m.name, "Visit booked", "Text", `You're booked: ${m.visit.toLowerCase()} ${slot}, with ${tech}. Reply C to change.`);
+        toast(`Scheduled with ${tech}. ${m.name.split(" ")[0]} got a confirmation text.`); break;
+      }
+      case "renew":
+        state.renewed[m.id] = true;
+        addLog(m.name, "Renewal receipt", "Email", `Thanks! Your ${PLANS[m.plan].name} plan is renewed for another year. ${money(PLANS[m.plan].price)} charged to ${m.card}.`);
+        toast(`Renewed. ${money(PLANS[m.plan].price)} charged to ${m.card}.`); break;
+      case "cardlink":
+        state.reminded[m.id] = true;
+        addLog(m.name, "Card update link", "Text", `Hi ${m.name.split(" ")[0]}, quick reminder to update your card so your plan stays active: ridgeline.tuneline.app/r/8KQ2`);
+        toast("Card update link texted."); break;
+      case "remind":
+        state.reminded[m.id] = true;
+        addLog(m.name, "Renewal reminder", "Email", `Your ${PLANS[m.plan].name} plan renews on ${fmt(m.renews)}. Pay online here or mail a check: ridgeline.tuneline.app/p/GA07`);
+        toast("Renewal reminder emailed."); break;
+      case "join": toast("This is what your customer sees. Signups land in Members automatically."); return;
+      case "add": toast("In the real tool: type a name or paste a whole spreadsheet."); return;
+    }
+    draw();
+  });
+  document.addEventListener("input", (e) => {
+    if (e.target.id !== "search") return;
+    state.search = e.target.value; draw();
+    const s = document.getElementById("search"); s.focus(); s.setSelectionRange(s.value.length, s.value.length);
+  });
+  draw();
+})();
+</script>
+</body>
+</html>
