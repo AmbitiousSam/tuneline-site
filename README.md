@@ -10,5 +10,5 @@ Static one-page site (plain HTML, no build step). "Tuneline" is a working name.
 2. On vercel.com: Add New > Project > import the repo. Framework preset: Other. No build command, output directory: `.` (root).
 
 ## Turn on signups
-The form shows a "preview only" notice until `FORM_ENDPOINT` near the bottom of `index.html` is set,
+Signups go to Formspree (`FORM_ENDPOINT` near the bottom of `index.html`).
 for example to a free Formspree form URL (`https://formspree.io/f/...`). Submissions then arrive by email.
